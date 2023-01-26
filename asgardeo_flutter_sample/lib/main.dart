@@ -1,4 +1,3 @@
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,10 +13,10 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
+        title: 'Asgardeo Flutter Integration',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         ),
         home: MyHomePage(),
       ),
@@ -26,98 +25,51 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
+  var isLoggedIn = false;
+  var pageIndex = 0;
 
-  void getNext() {
-    current = WordPair.random();
+  void logIn() {
+    isLoggedIn = true;
     notifyListeners();
   }
 
-  // ↓ Add the code below.
-  var favorites = <WordPair>[];
+  void logOut() {
+    isLoggedIn = false;
+    notifyListeners();
+  }
 
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
-    } else {
-      favorites.add(current);
-    }
+  void changePageIndex(page) {
+    pageIndex = page;
     notifyListeners();
   }
 }
 
-
-class MyHomePage extends StatefulWidget {
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  var selectedIndex = 0;
-
+class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
 
     return Scaffold(
-      body: LogInPage(),
-
+      appBar: AppBar(
+        title: Text('Flutter Authentication Sample'),
+      ),
+      body: appState.isLoggedIn
+          ? (appState.pageIndex == 1 ? HomePage() : ProfilePage())
+          : LogInPage(),
     );
-    // Widget page;
-    // switch (selectedIndex) {
-    //   case 0:
-    //     page = GeneratorPage();
-    //     break;
-    //   case 1:
-    //     page = Faviourite();
-    //     break;
-    //   default:
-    //     throw UnimplementedError('no widget for $selectedIndex');
-    // }
-    //
-    // return Scaffold(
-    //   body: Row(
-    //     children: [
-    //       SafeArea(
-    //         child: NavigationRail(
-    //           extended: false,
-    //           destinations: [
-    //             NavigationRailDestination(
-    //               icon: Icon(Icons.home),
-    //               label: Text('Home'),
-    //             ),
-    //             NavigationRailDestination(
-    //               icon: Icon(Icons.favorite),
-    //               label: Text('Favorites'),
-    //             ),
-    //           ],
-    //           selectedIndex: selectedIndex,
-    //           onDestinationSelected: (value) {
-    //             setState(() {
-    //               selectedIndex = value;
-    //             });
-    //           },
-    //         ),
-    //       ),
-    //       Expanded(
-    //         child: Container(
-    //           color: Theme.of(context).colorScheme.primaryContainer,
-    //           child: page,
-    //         ),
-    //       ),
-    //     ],
-    //   ),
-    // );
   }
 }
 
 class LogInPage extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          print("logIn");
+          appState.logIn();
+          appState.changePageIndex(1);
         },
         child: Text('Sign In'),
       ),
@@ -125,44 +77,30 @@ class LogInPage extends StatelessWidget {
   }
 }
 
-
-class GeneratorPage extends StatelessWidget {
+class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var pair = appState.current;
-
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
 
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          BigCard(pair: pair),
-          SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite();
-                },
-                icon: Icon(icon),
-                label: Text('Like'),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  appState.getNext();
-                },
-                child: Text('Next'),
-              ),
-            ],
+          Text("Welcome!", style: TextStyle(fontSize: 35)),
+          SizedBox(height: 100),
+          ElevatedButton(
+            onPressed: () {
+              appState.changePageIndex(2);
+            },
+            child: Text('View Profile'),
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              appState.logOut();
+              appState.changePageIndex(0);
+            },
+            child: Text('Sign out'),
           ),
         ],
       ),
@@ -170,102 +108,57 @@ class GeneratorPage extends StatelessWidget {
   }
 }
 
-class Faviourite extends StatelessWidget {
+class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
 
-    if (appState.favorites.isEmpty) {
-      return Center(
-        child: Text('No favorites yet.'),
-      );
-    }
-
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text('You have '
-              '${appState.favorites.length} favorites:'),
-        ),
-        for (var pair in appState.favorites)
-          ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("Profile Information", style: TextStyle(fontSize: 30)),
+          SizedBox(height: 50),
+          Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blue, width: 4.0),
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                fit: BoxFit.fill,
+                image: NetworkImage(
+                    'https://media.istockphoto.com/id/639454418/photo/close-up-of-beagle-against-gray-background.jpg?s=1024x1024&w=is&k=20&c=UYhYASTsGtLC6SSWG8FdUICt6bf9nZPh6IPOLzZh3P0=' ??
+                        ''),
+              ),
+            ),
           ),
-      ],
-    );
-  }
-}
-
-// class MyHomePage extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     var appState = context.watch<MyAppState>();
-//     var pair = appState.current;
-//
-//     IconData icon;
-//     if (appState.favorites.contains(pair)) {
-//       icon = Icons.favorite;
-//     } else {
-//       icon = Icons.favorite_border;
-//     }
-//
-//     return Scaffold(
-//       body: Center(
-//         child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Text('A random idea:'),
-//           BigCard(pair: pair),
-//           SizedBox(height: 10),
-//           Row(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               ElevatedButton.icon(
-//                 onPressed: () {
-//                   appState.toggleFavorite();
-//                 },
-//                 icon: Icon(icon),
-//                 label: Text('Like'),
-//               ),
-//               SizedBox(width: 10),
-//               ElevatedButton(
-//                 onPressed: () {
-//                   appState.getNext();
-//                 },
-//                 child: Text('Next'),
-//               ),
-//             ],
-//           ),
-//         ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-class BigCard extends StatelessWidget {
-  const BigCard({
-    Key? key,
-    required this.pair,
-  }) : super(key: key);
-
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    var theme = Theme.of(context);
-
-    var style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-    return Card(
-      color: theme.colorScheme.primary,
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Text(pair.asLowerCase, style: style),
-        ),
+          SizedBox(height: 20),
+          Card(
+              elevation: 0,
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    SizedBox(height: 20),
+                    Text('First Name: John', style: TextStyle(fontSize: 20)),
+                    Text('Last Name: Mayer', style: TextStyle(fontSize: 20)),
+                    Text('Age: 20', style: TextStyle(fontSize: 20)),
+                    Text('Mobile: +1717552749', style: TextStyle(fontSize: 20)),
+                    Text('Country: USA', style: TextStyle(fontSize: 20)),
+                  ],
+                ),
+              )),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              appState.changePageIndex(1);
+            },
+            child: Text('Back to home'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,75 +1,169 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_appauth/flutter_appauth.dart';
+
+final FlutterAppAuth flutterAppAuth = FlutterAppAuth();
+
+const clientId = 'XGrwnd_G4VUEGDGcmjWG27E_3qwa';
+const redirectUrl = 'wso2.asgardeo.sampleflutterapp://login-callback';
+const discoveryUrl =
+    'https://api.asgardeo.io/t/lakshia/oauth2/token/.well-known/openid-configuration';
+const userInfoEndpoint = 'https://api.asgardeo.io/t/lakshia/oauth2/userinfo';
+const issuerUrl = 'https://api.asgardeo.io/t/lakshia/oauth2/token';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  @override
+  State<MyApp> createState() {
+    return _MyAppState();
+  }
+}
+
+class _MyAppState extends State<MyApp> {
+  late int _pageIndex;
+  late bool _isUserLoggedIn;
+  late String? _idToken;
+  late String? _accessToken;
+  late String? _firstName;
+  late String? _lastName;
+  late String? _age;
+  late String? _country;
+  late String? _mobile;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageIndex = 1;
+    _isUserLoggedIn = false;
+    _idToken = '';
+    _accessToken = '';
+    _firstName = '';
+    _lastName = '';
+    _age = '20';
+    _country = 'USA';
+    _mobile = '+192765421';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Asgardeo Flutter Integration',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+    return MaterialApp(
+      title: 'Asgardeo Flutter Integration',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+      ),
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Asgardeo Flutter Integration'),
         ),
-        home: MyHomePage(),
+        body: _isUserLoggedIn
+            ? _pageIndex == 2
+                ? HomePage(retrieveUserDetails, logOutFunction)
+                : _pageIndex == 3
+                    ? ProfilePage(_firstName, _lastName, _age, _country,
+                        _mobile, setPageIndex)
+                    : LogInPage(loginFunction)
+            : LogInPage(loginFunction),
       ),
     );
   }
-}
 
-class MyAppState extends ChangeNotifier {
-  var isLoggedIn = false;
-  var pageIndex = 0;
-
-  void logIn() {
-    isLoggedIn = true;
-    notifyListeners();
+  void setPageIndex(index) {
+    setState(() {
+      _pageIndex = index;
+    });
   }
 
-  void logOut() {
-    isLoggedIn = false;
-    notifyListeners();
+  Future<void> loginFunction() async {
+    try {
+      final AuthorizationTokenResponse? result =
+          await flutterAppAuth.authorizeAndExchangeCode(
+        AuthorizationTokenRequest(
+          clientId,
+          redirectUrl,
+          discoveryUrl: discoveryUrl,
+          scopes: ['openid', 'profile'],
+        ),
+      );
+
+      final idTokenParsed = parseIdToken(result?.idToken);
+
+      setState(() {
+        _isUserLoggedIn = true;
+        _idToken = result?.idToken;
+        _accessToken = result?.accessToken;
+        _pageIndex = 2;
+      });
+    } catch (e, s) {
+      print('Error while login to the system: $e - stack: $s');
+      setState(() {
+        _isUserLoggedIn = false;
+      });
+    }
   }
 
-  void changePageIndex(page) {
-    pageIndex = page;
-    notifyListeners();
+  Map<String, dynamic> parseIdToken(String? idToken) {
+    final parts = idToken?.split(r'.');
+    assert(parts?.length == 3);
+
+    return jsonDecode(
+        utf8.decode(base64Url.decode(base64Url.normalize(parts![1]))));
   }
-}
 
-class MyHomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Flutter Authentication Sample'),
-      ),
-      body: appState.isLoggedIn
-          ? (appState.pageIndex == 1 ? HomePage() : ProfilePage())
-          : LogInPage(),
+  Future<void> retrieveUserDetails() async {
+    final userInfoResponse = await http.get(
+      userInfoEndpoint,
+      headers: {'Authorization': 'Bearer $_accessToken'},
     );
+
+    if (userInfoResponse.statusCode == 200) {
+      var profile = jsonDecode(userInfoResponse.body);
+      setState(() {
+        _firstName = profile['given_name'];
+        _lastName = profile['family_name'];
+        _pageIndex = 3;
+      });
+    } else {
+      throw Exception('Failed to get user profile information');
+    }
+  }
+
+  void logOutFunction() async {
+    try {
+      final EndSessionResponse? result = await flutterAppAuth.endSession(
+        EndSessionRequest(
+          idTokenHint: _idToken,
+          postLogoutRedirectUrl: redirectUrl,
+          discoveryUrl: discoveryUrl,
+        ),
+      );
+
+      setState(() {
+        _isUserLoggedIn = false;
+        _pageIndex = 1;
+      });
+    } catch (e, s) {
+      print('Error while logout from the system: $e - stack: $s');
+    }
   }
 }
 
 class LogInPage extends StatelessWidget {
+  final loginFunction;
+
+  const LogInPage(this.loginFunction);
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          appState.logIn();
-          appState.changePageIndex(1);
+          loginFunction();
+          // appState.userLogin();
         },
         child: Text('Sign In'),
       ),
@@ -78,10 +172,13 @@ class LogInPage extends StatelessWidget {
 }
 
 class HomePage extends StatelessWidget {
+  final retriveProfileFunction;
+  final logOutFunction;
+
+  const HomePage(this.retriveProfileFunction, this.logOutFunction);
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -90,15 +187,14 @@ class HomePage extends StatelessWidget {
           SizedBox(height: 100),
           ElevatedButton(
             onPressed: () {
-              appState.changePageIndex(2);
+              retriveProfileFunction();
             },
             child: Text('View Profile'),
           ),
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
-              appState.logOut();
-              appState.changePageIndex(0);
+              logOutFunction();
             },
             child: Text('Sign out'),
           ),
@@ -109,10 +205,18 @@ class HomePage extends StatelessWidget {
 }
 
 class ProfilePage extends StatelessWidget {
+  final firstName;
+  final LastName;
+  final age;
+  final country;
+  final mobile;
+  final pageIndex;
+
+  const ProfilePage(this.firstName, this.LastName, this.age, this.country,
+      this.mobile, this.pageIndex);
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -142,18 +246,20 @@ class ProfilePage extends StatelessWidget {
                 child: Column(
                   children: [
                     SizedBox(height: 20),
-                    Text('First Name: John', style: TextStyle(fontSize: 20)),
-                    Text('Last Name: Mayer', style: TextStyle(fontSize: 20)),
-                    Text('Age: 20', style: TextStyle(fontSize: 20)),
-                    Text('Mobile: +1717552749', style: TextStyle(fontSize: 20)),
-                    Text('Country: USA', style: TextStyle(fontSize: 20)),
+                    Text('First Name: $firstName',
+                        style: TextStyle(fontSize: 20)),
+                    Text('Last Name: $LastName',
+                        style: TextStyle(fontSize: 20)),
+                    Text('Age: $age', style: TextStyle(fontSize: 20)),
+                    Text('Mobile: $mobile', style: TextStyle(fontSize: 20)),
+                    Text('Country: $country', style: TextStyle(fontSize: 20)),
                   ],
                 ),
               )),
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
-              appState.changePageIndex(1);
+              pageIndex(2);
             },
             child: Text('Back to home'),
           ),

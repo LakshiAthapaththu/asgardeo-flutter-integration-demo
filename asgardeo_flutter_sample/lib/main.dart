@@ -92,7 +92,6 @@ class _MyAppState extends State<MyApp> {
         ),
       );
 
-      final idTokenParsed = parseIdToken(result?.idToken);
       setState(() {
         _isUserLoggedIn = true;
         _idToken = result?.idToken;
@@ -105,14 +104,6 @@ class _MyAppState extends State<MyApp> {
         _isUserLoggedIn = false;
       });
     }
-  }
-
-  Map<String, dynamic> parseIdToken(String? idToken) {
-    final parts = idToken?.split(r'.');
-    assert(parts?.length == 3);
-
-    return jsonDecode(
-        utf8.decode(base64Url.decode(base64Url.normalize(parts![1]))));
   }
 
   Future<void> retrieveUserDetails() async {

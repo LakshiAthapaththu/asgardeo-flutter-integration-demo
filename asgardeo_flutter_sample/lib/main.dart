@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 
-const clientId = 'XGrwnd_G4VUEGDGcmjWG27E_3qwa';
-const redirectUrl = 'wso2.asgardeo.sampleflutterapp://login-callback';
-const discoveryUrl =
-    'https://api.asgardeo.io/t/lakshia/oauth2/token/.well-known/openid-configuration';
-const userInfoEndpoint = 'https://api.asgardeo.io/t/lakshia/oauth2/userinfo';
-const issuerUrl = 'https://api.asgardeo.io/t/lakshia/oauth2/token';
-
 void main() {
   runApp(MyApp());
 }
@@ -24,20 +17,23 @@ class _MyAppState extends State<MyApp> {
   late bool _isUserLoggedIn;
   late String? _firstName;
   late String? _lastName;
-  late String? _age;
+  late String? _dateOfBirth;
   late String? _country;
   late String? _mobile;
+  late String? _photo;
 
   @override
   void initState() {
     super.initState();
     _pageIndex = 1;
     _isUserLoggedIn = false;
-    _firstName = 'John';
+    _firstName = 'Anne';
     _lastName = 'Mayer';
-    _age = '20';
-    _country = 'USA';
-    _mobile = '+192765421';
+    _dateOfBirth = '2020-01-01';
+    _country = 'Sri Lanka';
+    _mobile = '+94717552749';
+    _photo =
+        'https://4192879.fs1.hubspotusercontent-na1.net/hub/4192879/hubfs/5cb5f901f929104729adbb8e_shutterstock_1152936797.jpg?width=944&height=590&name=5cb5f901f929104729adbb8e_shutterstock_1152936797.jpg';
   }
 
   @override
@@ -54,11 +50,11 @@ class _MyAppState extends State<MyApp> {
         ),
         body: _isUserLoggedIn
             ? _pageIndex == 2
-            ? HomePage(retrieveUserDetails, logOutFunction)
-            : _pageIndex == 3
-            ? ProfilePage(_firstName, _lastName, _age, _country,
-            _mobile, setPageIndex)
-            : LogInPage(loginFunction)
+                ? HomePage(retrieveUserDetails, logOutFunction)
+                : _pageIndex == 3
+                    ? ProfilePage(_firstName, _lastName, _dateOfBirth, _country,
+                        _mobile, _photo, setPageIndex)
+                    : LogInPage(loginFunction)
             : LogInPage(loginFunction),
       ),
     );
@@ -71,20 +67,22 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> loginFunction() async {
-    setPageIndex(2);
     setState(() {
       _isUserLoggedIn = true;
+      _pageIndex = 2;
     });
   }
 
   Future<void> retrieveUserDetails() async {
-    setPageIndex(3);
+    setState(() {
+      _pageIndex = 3;
+    });
   }
 
   void logOutFunction() async {
-    setPageIndex(1);
     setState(() {
       _isUserLoggedIn = false;
+      _pageIndex = 1;
     });
   }
 }
@@ -126,7 +124,7 @@ class HomePage extends StatelessWidget {
             onPressed: () {
               retriveProfileFunction();
             },
-            child: Text('View Profile'),
+            child: Text('View profile'),
           ),
           SizedBox(height: 20),
           ElevatedButton(
@@ -144,13 +142,14 @@ class HomePage extends StatelessWidget {
 class ProfilePage extends StatelessWidget {
   final firstName;
   final LastName;
-  final age;
+  final dateOdBirth;
   final country;
   final mobile;
+  final photo;
   final pageIndex;
 
-  const ProfilePage(this.firstName, this.LastName, this.age, this.country,
-      this.mobile, this.pageIndex);
+  const ProfilePage(this.firstName, this.LastName, this.dateOdBirth,
+      this.country, this.mobile, this.photo, this.pageIndex);
 
   @override
   Widget build(BuildContext context) {
@@ -164,13 +163,11 @@ class ProfilePage extends StatelessWidget {
             width: 150,
             height: 150,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.blue, width: 4.0),
+              border: Border.all(color: Colors.blue, width: 3.0),
               shape: BoxShape.circle,
               image: DecorationImage(
-                fit: BoxFit.fill,
-                image: NetworkImage(
-                    'https://media.istockphoto.com/id/639454418/photo/close-up-of-beagle-against-gray-background.jpg?s=1024x1024&w=is&k=20&c=UYhYASTsGtLC6SSWG8FdUICt6bf9nZPh6IPOLzZh3P0=' ??
-                        ''),
+                fit: BoxFit.fitHeight,
+                image: NetworkImage(photo ?? ''),
               ),
             ),
           ),
@@ -182,14 +179,20 @@ class ProfilePage extends StatelessWidget {
                 padding: EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    SizedBox(height: 20),
+                    SizedBox(height: 15),
                     Text('First Name: $firstName',
                         style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 10),
                     Text('Last Name: $LastName',
                         style: TextStyle(fontSize: 20)),
-                    Text('Age: $age', style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 10),
+                    Text('Date of Birth: $dateOdBirth',
+                        style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 10),
                     Text('Mobile: $mobile', style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 10),
                     Text('Country: $country', style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 20),
                   ],
                 ),
               )),

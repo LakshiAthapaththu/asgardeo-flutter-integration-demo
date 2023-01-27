@@ -30,9 +30,10 @@ class _MyAppState extends State<MyApp> {
   late String? _accessToken;
   late String? _firstName;
   late String? _lastName;
-  late String? _age;
+  late String? _dateOfBirth;
   late String? _country;
   late String? _mobile;
+  late String? _photo;
 
   @override
   void initState() {
@@ -43,9 +44,10 @@ class _MyAppState extends State<MyApp> {
     _accessToken = '';
     _firstName = '';
     _lastName = '';
-    _age = '20';
-    _country = 'USA';
-    _mobile = '+192765421';
+    _dateOfBirth = '';
+    _country = '';
+    _mobile = '';
+    _photo = '';
   }
 
   @override
@@ -64,8 +66,8 @@ class _MyAppState extends State<MyApp> {
             ? _pageIndex == 2
                 ? HomePage(retrieveUserDetails, logOutFunction)
                 : _pageIndex == 3
-                    ? ProfilePage(_firstName, _lastName, _age, _country,
-                        _mobile, setPageIndex)
+                    ? ProfilePage(_firstName, _lastName, _dateOfBirth, _country,
+                        _mobile, _photo, setPageIndex)
                     : LogInPage(loginFunction)
             : LogInPage(loginFunction),
       ),
@@ -91,7 +93,6 @@ class _MyAppState extends State<MyApp> {
       );
 
       final idTokenParsed = parseIdToken(result?.idToken);
-
       setState(() {
         _isUserLoggedIn = true;
         _idToken = result?.idToken;
@@ -125,6 +126,10 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _firstName = profile['given_name'];
         _lastName = profile['family_name'];
+        _dateOfBirth = profile['birthdate'];
+        _country = profile['address']['country'];
+        _mobile = profile['phone_number'];
+        _photo = profile['picture'];
         _pageIndex = 3;
       });
     } else {
@@ -189,7 +194,7 @@ class HomePage extends StatelessWidget {
             onPressed: () {
               retriveProfileFunction();
             },
-            child: Text('View Profile'),
+            child: Text('View profile'),
           ),
           SizedBox(height: 20),
           ElevatedButton(
@@ -207,13 +212,14 @@ class HomePage extends StatelessWidget {
 class ProfilePage extends StatelessWidget {
   final firstName;
   final LastName;
-  final age;
+  final dateOdBirth;
   final country;
   final mobile;
+  final photo;
   final pageIndex;
 
-  const ProfilePage(this.firstName, this.LastName, this.age, this.country,
-      this.mobile, this.pageIndex);
+  const ProfilePage(this.firstName, this.LastName, this.dateOdBirth, this.country,
+      this.mobile, this.photo, this.pageIndex);
 
   @override
   Widget build(BuildContext context) {
@@ -227,13 +233,13 @@ class ProfilePage extends StatelessWidget {
             width: 150,
             height: 150,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.blue, width: 4.0),
+              border: Border.all(color: Colors.blue, width: 3.0),
               shape: BoxShape.circle,
               image: DecorationImage(
-                fit: BoxFit.fill,
+                fit: BoxFit.fitHeight,
                 image: NetworkImage(
-                    'https://media.istockphoto.com/id/639454418/photo/close-up-of-beagle-against-gray-background.jpg?s=1024x1024&w=is&k=20&c=UYhYASTsGtLC6SSWG8FdUICt6bf9nZPh6IPOLzZh3P0=' ??
-                        ''),
+                    photo ??
+                ''),
               ),
             ),
           ),
@@ -245,14 +251,19 @@ class ProfilePage extends StatelessWidget {
                 padding: EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    SizedBox(height: 20),
+                    SizedBox(height: 15),
                     Text('First Name: $firstName',
                         style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 10),
                     Text('Last Name: $LastName',
                         style: TextStyle(fontSize: 20)),
-                    Text('Age: $age', style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 10),
+                    Text('Date of Birth: $dateOdBirth', style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 10),
                     Text('Mobile: $mobile', style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 10),
                     Text('Country: $country', style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 20),
                   ],
                 ),
               )),

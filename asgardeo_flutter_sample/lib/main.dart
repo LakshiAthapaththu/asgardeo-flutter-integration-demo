@@ -5,12 +5,11 @@ import 'package:flutter_appauth/flutter_appauth.dart';
 
 final FlutterAppAuth flutterAppAuth = FlutterAppAuth();
 
-const clientId = 'XGrwnd_G4VUEGDGcmjWG27E_3qwa';
+const clientId = '<ADD-YOUR-CLIENT-ID>';
 const redirectUrl = 'wso2.asgardeo.sampleflutterapp://login-callback';
 const discoveryUrl =
     'https://api.asgardeo.io/t/lakshia/oauth2/token/.well-known/openid-configuration';
 const userInfoEndpoint = 'https://api.asgardeo.io/t/lakshia/oauth2/userinfo';
-const issuerUrl = 'https://api.asgardeo.io/t/lakshia/oauth2/token';
 
 void main() {
   runApp(MyApp());

@@ -54,7 +54,7 @@
                  <string>Editor</string>
                  <key>CFBundleURLSchemes</key>
                  <array>
-                    <string>wso2.asgardeo.sampleflutterapp://login-callback</string>
+                    <string>wso2.asgardeo.sampleflutterapp</string>
                  </array>
               </dict>
            </array>

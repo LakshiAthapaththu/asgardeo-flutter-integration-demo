@@ -27,6 +27,18 @@
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
+
 	<string>NSApplication</string>
+	<key>CFBundleURLTypes</key>
+         <array>
+            <dict>
+               <key>CFBundleTypeRole</key>
+               <string>Editor</string>
+               <key>CFBundleURLSchemes</key>
+               <array>
+                  <string>wso2.asgardeo.sampleflutterapp</string>
+               </array>
+            </dict>
+         </array>
 </dict>
 </plist>

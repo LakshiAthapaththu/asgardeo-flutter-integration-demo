@@ -87,6 +87,7 @@ class _MyAppState extends State<MyApp> {
           clientId,
           redirectUrl,
           discoveryUrl: discoveryUrl,
+          promptValues: ['login'],
           scopes: ['openid', 'profile'],
         ),
       );
@@ -156,8 +157,8 @@ class LogInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: ElevatedButton(
-        onPressed: () {
-          loginFunction();
+        onPressed: () async {
+          await loginFunction();
           // appState.userLogin();
         },
         child: Text('Sign In'),
@@ -181,15 +182,15 @@ class HomePage extends StatelessWidget {
           Text("Welcome!", style: TextStyle(fontSize: 35)),
           SizedBox(height: 100),
           ElevatedButton(
-            onPressed: () {
-              retriveProfileFunction();
+            onPressed: () async {
+              await retriveProfileFunction();
             },
             child: Text('View profile'),
           ),
           SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {
-              logOutFunction();
+            onPressed: () async {
+              await logOutFunction();
             },
             child: Text('Sign out'),
           ),

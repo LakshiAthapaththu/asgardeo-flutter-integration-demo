@@ -51,8 +51,8 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        manifestPlaceholders = [
-                'appAuthRedirectScheme': 'wso2.asgardeo.sampleflutterapp://login-callback'
+        manifestPlaceholders += [
+                'appAuthRedirectScheme': 'wso2.asgardeo.sampleflutterapp'
         ]
     }
 
